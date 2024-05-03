@@ -49,6 +49,17 @@ app.post('/fetch-product-details', async (req, res) => {
             .match(/[+-]?([0-9]*[.])?[0-9]+/)[0];
         }
       }
+      const rows2 = Array.from(
+        document.querySelectorAll('#detailBullets_feature_div ul.a-unordered-list')
+      );
+      for (const row2 of rows2) {
+        const header = row2.querySelector('li').textContent.trim();
+        if (header.includes('Product Dimensions')) {
+          const dimensionText = row2.querySelector('span').textContent.trim();
+          const weightIndex = dimensionText.lastIndexOf(';') + 1;
+          return dimensionText.substring(weightIndex).match(/[+-]?([0-9]*[.])?[0-9]+/)[0];
+        }
+      }
       return 'Weight not found';
     });
 
@@ -56,6 +67,7 @@ app.post('/fetch-product-details', async (req, res) => {
 
     res.status(200).send({ image, title, price, weight });
   } catch (error) {
+    console.log(error);
     res.status(500).send({ error: 'Failed to fetch product details' });
   }
 });
