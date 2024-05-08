@@ -50,7 +50,7 @@ app.post('/fetch-product-details', async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch({headless:true});
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.goto(url);
 
@@ -99,9 +99,37 @@ app.post('/fetch-product-details', async (req, res) => {
       return 'Weight not found';
     });
 
+    const amazonShipping = await page.evaluate(() => {
+      const shippingElements = document.querySelectorAll('table.a-lineitem tr');
+      for (const element of shippingElements) {
+        const text = element.querySelector('td.a-span9.a-text-left span.a-size-base.a-color-secondary').textContent.trim();
+        if (text === 'AmazonGlobal Shipping') {
+          const priceElement = element.querySelector('td.a-span2.a-text-right span.a-size-base.a-color-base');
+          if (priceElement) {
+            return priceElement.textContent.trim().replace(/\$/g, '');
+          }
+        }
+      }
+      return null;
+    });
+    
+    const importCharges = await page.evaluate(() => {
+      const chargesElements = document.querySelectorAll('table.a-lineitem tr');
+      for (const element of chargesElements) {
+        const text = element.querySelector('td.a-span9.a-text-left span.a-size-base.a-color-secondary').textContent.trim();
+        if (text === 'Estimated Import Charges') {
+          const chargesPriceElement = element.querySelector('td.a-span2.a-text-right span.a-size-base.a-color-base');
+          if (chargesPriceElement) {
+            return chargesPriceElement.textContent.trim().replace(/\$/g, '');
+          }
+        }
+      }
+      return null;
+    });
+    
     await browser.close();
 
-    res.status(200).send({ image, title, price, weight });
+    res.status(200).send({ image, title, price, weight, amazonShipping: amazonShipping ?? 0, importCharges: importCharges ?? 0 });
   } catch (error) {
     console.log(error);
     // res.status(200).send(error);
