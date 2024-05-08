@@ -50,9 +50,10 @@ app.post('/fetch-product-details', async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({headless:true});
     const page = await browser.newPage();
     await page.goto(url);
+    // await page.screenshot({ path: 'screenshot.png' });
 
     // Get image
     const image = await page.$eval('.imgTagWrapper img', (img) => img.src);
@@ -99,6 +100,7 @@ app.post('/fetch-product-details', async (req, res) => {
       return 'Weight not found';
     });
 
+    
     const amazonShipping = await page.evaluate(() => {
       const shippingElements = document.querySelectorAll('table.a-lineitem tr');
       for (const element of shippingElements) {
@@ -126,10 +128,10 @@ app.post('/fetch-product-details', async (req, res) => {
       }
       return null;
     });
-    
+
     await browser.close();
 
-    res.status(200).send({ image, title, price, weight, amazonShipping: amazonShipping ?? 0, importCharges: importCharges ?? 0 });
+    res.status(200).send({ image, title, price, weight,amazonShipping:amazonShipping??0 ,importCharges:importCharges??0});
   } catch (error) {
     console.log(error);
     // res.status(200).send(error);
